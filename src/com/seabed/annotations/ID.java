@@ -7,12 +7,6 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface DBFieldAnnotation {
-
-	public boolean isDBField() default false;
-
-	public boolean isList() default false;
-
-	public boolean isJSON() default false;
+public @interface ID {
 
 }
