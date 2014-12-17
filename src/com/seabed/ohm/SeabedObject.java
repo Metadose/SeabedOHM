@@ -10,7 +10,6 @@ import java.util.Set;
 
 import org.json.JSONObject;
 
-import com.seabed.ohm.annotations.DataType;
 import com.seabed.ohm.annotations.ID;
 import com.seabed.ohm.annotations.Persist;
 import com.seabed.ohm.annotations.SBObject;

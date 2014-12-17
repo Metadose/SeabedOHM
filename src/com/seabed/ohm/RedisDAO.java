@@ -11,7 +11,6 @@ import org.json.JSONObject;
 
 import redis.clients.jedis.Jedis;
 
-import com.seabed.ohm.annotations.DataType;
 import com.seabed.ohm.annotations.Persist;
 import com.seabed.ohm.annotations.SBObject;
 import com.seabed.ohm.exceptions.NoIDFieldFoundException;
