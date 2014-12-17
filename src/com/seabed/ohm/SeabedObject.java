@@ -2,35 +2,40 @@ package com.seabed.ohm;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.json.JSONObject;
 
-import com.seabed.annotations.DBField;
-import com.seabed.annotations.DBObject;
 import com.seabed.annotations.DataType;
 import com.seabed.annotations.ID;
-import com.seabed.util.TraceUtilities;
+import com.seabed.annotations.Persist;
+import com.seabed.annotations.SBObject;
+import com.seabed.exceptions.MultipleIDFieldFoundException;
+import com.seabed.exceptions.NoIDFieldFoundException;
+import com.seabed.exceptions.NoNamespaceFoundException;
+import com.seabed.exceptions.NoPersistentFieldFoundException;
+import com.seabed.exceptions.NoSBObjectAnnotationException;
 
 public class SeabedObject implements ISeabedObject {
 
-	public SeabedObject() {
+	public SeabedObject() throws NoNamespaceFoundException,
+			NoPersistentFieldFoundException, NoIDFieldFoundException,
+			MultipleIDFieldFoundException {
 		if (!namespaceExists()) {
-			TraceUtilities.print("DBClassAnnotation does not exist in "
-					+ this.getClass());
+			throw new NoNamespaceFoundException();
 		}
 		if (getDBFields().isEmpty()) {
-			TraceUtilities.print("No DBFieldAnnotation fields defined in "
-					+ this.getClass());
+			throw new NoPersistentFieldFoundException();
 		}
 		int idCount = countIDFields();
 		if (idCount == 0) {
-			TraceUtilities.print("No ID field defined in " + this.getClass());
+			throw new NoIDFieldFoundException();
 		} else if (idCount > 1) {
-			TraceUtilities.print("More than one ID field defined in "
-					+ this.getClass());
+			throw new MultipleIDFieldFoundException();
 		}
 	}
 
@@ -60,7 +65,7 @@ public class SeabedObject implements ISeabedObject {
 	public List<String> getDBFields() {
 		List<String> dbFields = new ArrayList<String>();
 		for (Field field : this.getClass().getFields()) {
-			DBField anno = field.getAnnotation(DBField.class);
+			Persist anno = field.getAnnotation(Persist.class);
 			if (anno != null) {
 				dbFields.add(field.getName());
 			}
@@ -74,7 +79,7 @@ public class SeabedObject implements ISeabedObject {
 	 * @return
 	 */
 	private boolean namespaceExists() {
-		DBObject anno = this.getClass().getAnnotation(DBObject.class);
+		SBObject anno = this.getClass().getAnnotation(SBObject.class);
 		return anno == null ? false : !anno.namespace().isEmpty();
 	}
 
@@ -89,7 +94,7 @@ public class SeabedObject implements ISeabedObject {
 				Field fieldObj = clazz.getField(field);
 
 				List<String> value = objectMap.get(field);
-				DBField anno = fieldObj.getAnnotation(DBField.class);
+				Persist anno = fieldObj.getAnnotation(Persist.class);
 				if (anno == null) {
 					continue;
 				}
@@ -139,12 +144,28 @@ public class SeabedObject implements ISeabedObject {
 
 	public void create() {
 		RedisDAO dao = new RedisDAO();
-		dao.create(getId(), this);
+		try {
+			dao.create(getId(), this);
+		} catch (NoSBObjectAnnotationException e) {
+			e.printStackTrace();
+		} catch (NoNamespaceFoundException e) {
+			e.printStackTrace();
+		} catch (NoIDFieldFoundException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void update() {
 		RedisDAO dao = new RedisDAO();
-		dao.update(getId(), this);
+		try {
+			dao.update(getId(), this);
+		} catch (NoSBObjectAnnotationException e) {
+			e.printStackTrace();
+		} catch (NoNamespaceFoundException e) {
+			e.printStackTrace();
+		} catch (NoIDFieldFoundException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public long delete() {
@@ -157,11 +178,21 @@ public class SeabedObject implements ISeabedObject {
 	 */
 	public static Set<String> getAllKeys(Class<?> clazz) {
 		RedisDAO dao = new RedisDAO();
-		return dao.getAllKeys(clazz);
+		try {
+			return dao.getAllKeys(clazz);
+		} catch (NoNamespaceFoundException e) {
+			e.printStackTrace();
+		}
+		return new HashSet<String>();
 	}
 
 	public static Map<String, List<String>> get(Class<?> clazz, String Id) {
 		RedisDAO dao = new RedisDAO();
-		return dao.get(clazz, Id);
+		try {
+			return dao.get(clazz, Id);
+		} catch (NoNamespaceFoundException e) {
+			e.printStackTrace();
+		}
+		return new HashMap<String, List<String>>();
 	}
 }

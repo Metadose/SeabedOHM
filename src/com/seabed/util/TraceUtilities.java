@@ -9,6 +9,11 @@ public class TraceUtilities {
 		System.out.println(stamp.getDate() + " " + string);
 	}
 
+	public static String trace(String string) {
+		Timestamp stamp = new Timestamp(System.currentTimeMillis());
+		return stamp.getDate() + " " + string;
+	}
+
 	public static void main(String[] args) {
 		print("test");
 	}

@@ -1,20 +1,23 @@
 package com.seabed.sample;
 
-import com.seabed.annotations.DBField;
-import com.seabed.annotations.DBObject;
 import com.seabed.annotations.ID;
+import com.seabed.annotations.Persist;
+import com.seabed.exceptions.SeabedOHMException;
 import com.seabed.ohm.SeabedObject;
 
-@DBObject(namespace = "sample")
 public class SampleObject extends SeabedObject {
+
+	public SampleObject() throws SeabedOHMException {
+		super();
+	}
 
 	@ID
 	public String id = "idKo";
 
-	@DBField
+	@Persist
 	public String test = "1";
 
-	@DBField
+	@Persist
 	public String test2 = "2";
 
 }

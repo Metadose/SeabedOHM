@@ -11,9 +11,12 @@ import org.json.JSONObject;
 
 import redis.clients.jedis.Jedis;
 
-import com.seabed.annotations.DBField;
-import com.seabed.annotations.DBObject;
 import com.seabed.annotations.DataType;
+import com.seabed.annotations.Persist;
+import com.seabed.annotations.SBObject;
+import com.seabed.exceptions.NoIDFieldFoundException;
+import com.seabed.exceptions.NoNamespaceFoundException;
+import com.seabed.exceptions.NoSBObjectAnnotationException;
 import com.seabed.util.TraceUtilities;
 import com.seabed.util.Utilities;
 
@@ -31,12 +34,13 @@ public class RedisDAO {
 	 * @param id
 	 * @param fields
 	 * @return
+	 * @throws NoNamespaceFoundException
 	 */
-	public Map<String, List<String>> get(Class<?> clazz, String id) {
-		String namespace = clazz.getAnnotation(DBObject.class).namespace();
+	public Map<String, List<String>> get(Class<?> clazz, String id)
+			throws NoNamespaceFoundException {
+		String namespace = clazz.getAnnotation(SBObject.class).namespace();
 		if (namespace == null) {
-			TraceUtilities.print("Namespace not present: " + clazz.toString());
-			return null;
+			throw new NoNamespaceFoundException();
 		}
 
 		// Get the key.
@@ -46,7 +50,7 @@ public class RedisDAO {
 		// Get the fields in this object.
 		Map<String, List<String>> valueList = new HashMap<String, List<String>>();
 		for (Field field : clazz.getFields()) {
-			DBField fieldAnno = field.getAnnotation(DBField.class);
+			Persist fieldAnno = field.getAnnotation(Persist.class);
 			if (fieldAnno == null) {
 				continue;
 			}
@@ -63,12 +67,14 @@ public class RedisDAO {
 
 	/**
 	 * Get all keys in a namespace.
+	 * 
+	 * @throws NoNamespaceFoundException
 	 */
-	public Set<String> getAllKeys(Class<?> clazz) {
-		String namespace = clazz.getAnnotation(DBObject.class).namespace();
+	public Set<String> getAllKeys(Class<?> clazz)
+			throws NoNamespaceFoundException {
+		String namespace = clazz.getAnnotation(SBObject.class).namespace();
 		if (namespace == null) {
-			TraceUtilities.print("Namespace not present: " + clazz.toString());
-			return null;
+			throw new NoNamespaceFoundException();
 		}
 		startConnection();
 		Set<String> keys = jedis.keys(namespace + ":*");
@@ -76,17 +82,21 @@ public class RedisDAO {
 		return keys;
 	}
 
-	public void create(String id, Object obj) {
+	public void create(String id, Object obj)
+			throws NoSBObjectAnnotationException, NoNamespaceFoundException,
+			NoIDFieldFoundException {
 		hmset(true, id, obj);
 	}
 
-	public void update(String id, Object obj) {
+	public void update(String id, Object obj)
+			throws NoSBObjectAnnotationException, NoNamespaceFoundException,
+			NoIDFieldFoundException {
 		hmset(false, id, obj);
 	}
 
 	public long delete(Object obj, String id) {
 		startConnection();
-		String key = obj.getClass().getAnnotation(DBObject.class).namespace()
+		String key = obj.getClass().getAnnotation(SBObject.class).namespace()
 				+ SEPARATOR + id;
 		long removed = jedis.del(key);
 		TraceUtilities.print("del: " + key + " " + removed);
@@ -99,15 +109,21 @@ public class RedisDAO {
 	 * 
 	 * @param namespace
 	 * @param obj
+	 * @throws NoSBObjectAnnotationException
+	 * @throws NoNamespaceFoundException
+	 * @throws NoIDFieldFoundException
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void hmset(boolean isCreate, String id, Object obj) {
+	public void hmset(boolean isCreate, String id, Object obj)
+			throws NoSBObjectAnnotationException, NoNamespaceFoundException,
+			NoIDFieldFoundException {
 		// Get and check the namespace.
 		String namespace = getNamespace(obj);
-		if (namespace == null || id.isEmpty()) {
-			TraceUtilities.print("Namespace or ID is not present: "
-					+ obj.getClass());
-			return;
+		if (namespace == null) {
+			throw new NoNamespaceFoundException();
+		}
+		if (id.isEmpty()) {
+			throw new NoIDFieldFoundException();
 		}
 
 		startConnection();
@@ -119,7 +135,7 @@ public class RedisDAO {
 			for (Field field : clazz.getFields()) {
 
 				// Get the annotation.
-				DBField fieldAnno = field.getAnnotation(DBField.class);
+				Persist fieldAnno = field.getAnnotation(Persist.class);
 
 				// If annotation does not exist, skip.
 				if (fieldAnno == null) {
@@ -174,15 +190,15 @@ public class RedisDAO {
 	 * 
 	 * @param obj
 	 * @return
+	 * @throws NoSBObjectAnnotationException
 	 */
-	private String getNamespace(Object obj) {
+	private String getNamespace(Object obj)
+			throws NoSBObjectAnnotationException {
 		// Construct key and initial objs.
 		Class<?> clazz = obj.getClass();
-		DBObject classAnno = clazz.getAnnotation(DBObject.class);
+		SBObject classAnno = clazz.getAnnotation(SBObject.class);
 		if (classAnno == null) {
-			TraceUtilities.print("DBClassAnnotation not present in "
-					+ obj.getClass());
-			return null;
+			throw new NoSBObjectAnnotationException();
 		}
 		return classAnno.namespace();
 	}
