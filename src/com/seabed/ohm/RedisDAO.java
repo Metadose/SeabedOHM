@@ -264,4 +264,10 @@ public class RedisDAO {
 		closeConnection();
 	}
 
+	public static void main(String[] args) {
+		Jedis jedis2 = new Jedis("localhost");
+		jedis2.flushAll();
+		jedis2.quit();
+	}
+
 }

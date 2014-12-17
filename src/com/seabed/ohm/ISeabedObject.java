@@ -2,7 +2,9 @@ package com.seabed.ohm;
 
 public interface ISeabedObject {
 
-	public String getId();
+	public void setId(Object idValue);
+
+	public String getId(boolean isCreate);
 
 	public void create();
 

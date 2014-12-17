@@ -29,7 +29,40 @@ public class SeabedObject implements ISeabedObject {
 	private int idDataType;
 	private String namespace;
 
+	/**
+	 * Construct a fresh object.
+	 * 
+	 * @throws NoNamespaceFoundException
+	 * @throws NoPersistentFieldFoundException
+	 * @throws NoIDFieldFoundException
+	 * @throws MultipleIDFieldFoundException
+	 * @throws AutoIncrementNotNumberException
+	 */
 	public SeabedObject() throws NoNamespaceFoundException,
+			NoPersistentFieldFoundException, NoIDFieldFoundException,
+			MultipleIDFieldFoundException, AutoIncrementNotNumberException {
+		check();
+	}
+
+	/**
+	 * On constructing an object based on a stored entry.
+	 * 
+	 * @param id
+	 * @throws NoNamespaceFoundException
+	 * @throws NoPersistentFieldFoundException
+	 * @throws NoIDFieldFoundException
+	 * @throws MultipleIDFieldFoundException
+	 * @throws AutoIncrementNotNumberException
+	 */
+	public SeabedObject(Object id) throws NoNamespaceFoundException,
+			NoPersistentFieldFoundException, NoIDFieldFoundException,
+			MultipleIDFieldFoundException, AutoIncrementNotNumberException {
+		check();
+		init(String.valueOf(id));
+		setId(id);
+	}
+
+	private void check() throws NoNamespaceFoundException,
 			NoPersistentFieldFoundException, NoIDFieldFoundException,
 			MultipleIDFieldFoundException, AutoIncrementNotNumberException {
 		checkNamespace();
@@ -192,9 +225,9 @@ public class SeabedObject implements ISeabedObject {
 	/**
 	 * Initialize the object.
 	 */
-	public void init() {
+	public void init(String id) {
 		Class<?> clazz = this.getClass();
-		Map<String, List<String>> objectMap = get(clazz, getId());
+		Map<String, List<String>> objectMap = get(clazz, id);
 		try {
 			for (String field : objectMap.keySet()) {
 				Field fieldObj = clazz.getField(field);
@@ -221,11 +254,28 @@ public class SeabedObject implements ISeabedObject {
 		}
 	}
 
-	public String getId() {
+	/**
+	 * Set the value of the ID field.
+	 * 
+	 * @param idValue
+	 */
+	public void setId(Object idValue) {
+		Field idField = getIdField();
+		try {
+			idField.set(this, idValue);
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public String getId(boolean isCreate) {
 		String value = "";
 
 		// If ID is a number and is set to auto-increment.
-		if (getIdDataType() == DataType.DATA_TYPE_NUMBER && isIDAutoIncrement()) {
+		if (getIdDataType() == DataType.DATA_TYPE_NUMBER && isIDAutoIncrement()
+				&& isCreate) {
 			RedisDAO dao = new RedisDAO();
 			long nextIncr = dao.getIncrement(getNamespace());
 			value = String.valueOf(nextIncr);
@@ -251,7 +301,7 @@ public class SeabedObject implements ISeabedObject {
 	public void create() {
 		RedisDAO dao = new RedisDAO();
 		try {
-			dao.create(getId(), this);
+			dao.create(getId(true), this);
 		} catch (NoSBObjectAnnotationException e) {
 			e.printStackTrace();
 		} catch (NoNamespaceFoundException e) {
@@ -269,7 +319,7 @@ public class SeabedObject implements ISeabedObject {
 	public void update() {
 		RedisDAO dao = new RedisDAO();
 		try {
-			dao.update(getId(), this);
+			dao.update(getId(false), this);
 		} catch (NoSBObjectAnnotationException e) {
 			e.printStackTrace();
 		} catch (NoNamespaceFoundException e) {
@@ -284,7 +334,7 @@ public class SeabedObject implements ISeabedObject {
 	 */
 	public long delete() {
 		RedisDAO dao = new RedisDAO();
-		return dao.delete(this, getId());
+		return dao.delete(this, getId(false));
 	}
 
 	/**
@@ -298,6 +348,10 @@ public class SeabedObject implements ISeabedObject {
 			e.printStackTrace();
 		}
 		return new HashSet<String>();
+	}
+
+	public static Map<String, List<String>> get(Class<?> clazz, long Id) {
+		return get(clazz, String.valueOf(Id));
 	}
 
 	/**
@@ -317,43 +371,45 @@ public class SeabedObject implements ISeabedObject {
 		return new HashMap<String, List<String>>();
 	}
 
-	public List<Field> getAllFields() {
+	@SuppressWarnings("unused")
+	private List<Field> getAllFields() {
 		return allFields;
 	}
 
-	public void setAllFields(List<Field> allFields) {
+	private void setAllFields(List<Field> allFields) {
 		this.allFields = allFields;
 	}
 
-	public Field getIdField() {
+	private Field getIdField() {
 		return idField;
 	}
 
-	public void setIdField(Field idField) {
+	private void setIdField(Field idField) {
 		this.idField = idField;
 	}
 
-	public String getNamespace() {
+	private String getNamespace() {
 		return namespace;
 	}
 
-	public void setNamespace(String namespace) {
+	private void setNamespace(String namespace) {
 		this.namespace = namespace;
 	}
 
-	public int getIdDataType() {
+	private int getIdDataType() {
 		return idDataType;
 	}
 
-	public void setIdDataType(int idDataType) {
+	private void setIdDataType(int idDataType) {
 		this.idDataType = idDataType;
 	}
 
-	public boolean isIDAutoIncrement() {
+	private boolean isIDAutoIncrement() {
 		return isIDAutoIncrement;
 	}
 
-	public void setIDAutoIncrement(boolean isIDAutoIncrement) {
+	private void setIDAutoIncrement(boolean isIDAutoIncrement) {
 		this.isIDAutoIncrement = isIDAutoIncrement;
 	}
+
 }
