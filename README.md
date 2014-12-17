@@ -8,6 +8,38 @@ SeabedOHM is an `Object-Hash Mapping` Java persistence library inspired by Hiber
 2. `jedis-2.0.0.jar` Java Redis Client
 
 
+## Sample
+```java
+package com.seabed.sample;
+
+import com.seabed.ohm.SeabedObject;
+import com.seabed.ohm.annotations.AutoIncrement;
+import com.seabed.ohm.annotations.ID;
+import com.seabed.ohm.annotations.Persist;
+import com.seabed.ohm.annotations.SBObject;
+import com.seabed.ohm.exceptions.SeabedOHMException;
+
+@SBObject(namespace = "sample")
+public class SampleObject extends SeabedObject {
+
+	public SampleObject() throws SeabedOHMException {
+		super();
+	}
+
+	@ID
+	@AutoIncrement
+	public int id;
+
+	@Persist
+	public String firstName;
+
+	@Persist
+	public String lastName;
+
+}
+```
+
+
 ## Usage
 
 ### Namespace
@@ -58,34 +90,3 @@ public class SampleObject extends SeabedObject
 2. String
 3. List<String>
 4. JSONObject
-
-### Example
-```java
-package com.seabed.sample;
-
-import com.seabed.ohm.SeabedObject;
-import com.seabed.ohm.annotations.AutoIncrement;
-import com.seabed.ohm.annotations.ID;
-import com.seabed.ohm.annotations.Persist;
-import com.seabed.ohm.annotations.SBObject;
-import com.seabed.ohm.exceptions.SeabedOHMException;
-
-@SBObject(namespace = "sample")
-public class SampleObject extends SeabedObject {
-
-	public SampleObject() throws SeabedOHMException {
-		super();
-	}
-
-	@ID
-	@AutoIncrement
-	public int id;
-
-	@Persist
-	public String firstName;
-
-	@Persist
-	public String lastName;
-
-}
-```
