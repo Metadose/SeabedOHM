@@ -1,4 +1,4 @@
-package com.seabed.annotations;
+package com.seabed.ohm.annotations;
 
 import java.lang.reflect.Field;
 import java.sql.Timestamp;

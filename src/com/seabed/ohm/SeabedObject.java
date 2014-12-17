@@ -10,15 +10,15 @@ import java.util.Set;
 
 import org.json.JSONObject;
 
-import com.seabed.annotations.DataType;
-import com.seabed.annotations.ID;
-import com.seabed.annotations.Persist;
-import com.seabed.annotations.SBObject;
-import com.seabed.exceptions.MultipleIDFieldFoundException;
-import com.seabed.exceptions.NoIDFieldFoundException;
-import com.seabed.exceptions.NoNamespaceFoundException;
-import com.seabed.exceptions.NoPersistentFieldFoundException;
-import com.seabed.exceptions.NoSBObjectAnnotationException;
+import com.seabed.ohm.annotations.DataType;
+import com.seabed.ohm.annotations.ID;
+import com.seabed.ohm.annotations.Persist;
+import com.seabed.ohm.annotations.SBObject;
+import com.seabed.ohm.exceptions.MultipleIDFieldFoundException;
+import com.seabed.ohm.exceptions.NoIDFieldFoundException;
+import com.seabed.ohm.exceptions.NoNamespaceFoundException;
+import com.seabed.ohm.exceptions.NoPersistentFieldFoundException;
+import com.seabed.ohm.exceptions.NoSBObjectAnnotationException;
 
 public class SeabedObject implements ISeabedObject {
 

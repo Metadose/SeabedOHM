@@ -1,9 +1,9 @@
 package com.seabed.sample;
 
-import com.seabed.annotations.ID;
-import com.seabed.annotations.Persist;
-import com.seabed.exceptions.SeabedOHMException;
 import com.seabed.ohm.SeabedObject;
+import com.seabed.ohm.annotations.ID;
+import com.seabed.ohm.annotations.Persist;
+import com.seabed.ohm.exceptions.SeabedOHMException;
 
 public class SampleObject extends SeabedObject {
 

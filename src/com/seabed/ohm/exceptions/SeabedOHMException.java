@@ -1,4 +1,4 @@
-package com.seabed.exceptions;
+package com.seabed.ohm.exceptions;
 
 import com.seabed.util.TraceUtilities;
 

@@ -1,4 +1,4 @@
-package com.seabed.exceptions;
+package com.seabed.ohm.exceptions;
 
 public class NoSBObjectAnnotationException extends SeabedOHMException {
 

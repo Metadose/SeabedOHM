@@ -11,12 +11,12 @@ import org.json.JSONObject;
 
 import redis.clients.jedis.Jedis;
 
-import com.seabed.annotations.DataType;
-import com.seabed.annotations.Persist;
-import com.seabed.annotations.SBObject;
-import com.seabed.exceptions.NoIDFieldFoundException;
-import com.seabed.exceptions.NoNamespaceFoundException;
-import com.seabed.exceptions.NoSBObjectAnnotationException;
+import com.seabed.ohm.annotations.DataType;
+import com.seabed.ohm.annotations.Persist;
+import com.seabed.ohm.annotations.SBObject;
+import com.seabed.ohm.exceptions.NoIDFieldFoundException;
+import com.seabed.ohm.exceptions.NoNamespaceFoundException;
+import com.seabed.ohm.exceptions.NoSBObjectAnnotationException;
 import com.seabed.util.TraceUtilities;
 import com.seabed.util.Utilities;
 
