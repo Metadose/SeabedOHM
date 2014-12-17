@@ -115,7 +115,7 @@ public static void create() throws SeabedOHMException {
 ### Update
 ```java
 public static void update() throws SeabedOHMException {
-	SampleObject obj = new SampleObject(2); // Construct the object.
+	SampleObject obj = new SampleObject(1); // Construct the object.
 	obj.setFirstName("Jane"); // Change the name of John to Jane.
 	obj.update(); // Update the entry.
 }
@@ -124,7 +124,7 @@ public static void update() throws SeabedOHMException {
 ### Delete
 ```java
 public static void delete() throws SeabedOHMException {
-	SampleObject obj = new SampleObject(2); // Construct the object.
+	SampleObject obj = new SampleObject(1); // Construct the object.
 	obj.delete(); // Delete the entry.
 }
 ```
