@@ -35,7 +35,60 @@ public class RedisDAO {
 	 * @return
 	 * @throws NoNamespaceFoundException
 	 */
-	public Map<String, List<String>> get(Class<?> clazz, String id)
+	public Object getAsObj(Object obj, String id)
+			throws NoNamespaceFoundException {
+		Class<?> clazz = obj.getClass();
+		String namespace = clazz.getAnnotation(SBObject.class).namespace();
+		if (namespace == null) {
+			throw new NoNamespaceFoundException();
+		}
+
+		// Get the key.
+		startConnection();
+		String key = namespace + SEPARATOR + id;
+
+		// Get the fields in this object.
+		for (Field field : clazz.getFields()) {
+			Persist fieldAnno = field.getAnnotation(Persist.class);
+			if (fieldAnno == null) {
+				continue;
+			}
+			String fieldName = field.getName();
+			List<String> resultList = jedis.hmget(key, fieldName);
+
+			// TODO
+			// Set the value inside the object.
+			try {
+				clazz.getField(fieldName).get(obj);
+				int dataType = DataType.getDataType(obj, field);
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			} catch (SecurityException e) {
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			} catch (NoSuchFieldException e) {
+				e.printStackTrace();
+			}
+
+		}
+
+		closeConnection();
+		return obj;
+	}
+
+	/**
+	 * Get values. hmget(String key)<br>
+	 * Retrieve the values associated to the specified fields.<br>
+	 * Pass fields defined in the object.<br>
+	 * 
+	 * @param namespace
+	 * @param id
+	 * @param fields
+	 * @return
+	 * @throws NoNamespaceFoundException
+	 */
+	public Map<String, List<String>> getAsMap(Class<?> clazz, String id)
 			throws NoNamespaceFoundException {
 		String namespace = clazz.getAnnotation(SBObject.class).namespace();
 		if (namespace == null) {

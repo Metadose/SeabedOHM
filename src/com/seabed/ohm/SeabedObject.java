@@ -227,7 +227,7 @@ public class SeabedObject implements ISeabedObject {
 	 */
 	public void init(String id) {
 		Class<?> clazz = this.getClass();
-		Map<String, List<String>> objectMap = get(clazz, id);
+		Map<String, List<String>> objectMap = getAsMap(clazz, id);
 		try {
 			for (String field : objectMap.keySet()) {
 				Field fieldObj = clazz.getField(field);
@@ -350,8 +350,8 @@ public class SeabedObject implements ISeabedObject {
 		return new HashSet<String>();
 	}
 
-	public static Map<String, List<String>> get(Class<?> clazz, long Id) {
-		return get(clazz, String.valueOf(Id));
+	public static Map<String, List<String>> getAsMap(Class<?> clazz, long Id) {
+		return getAsMap(clazz, String.valueOf(Id));
 	}
 
 	/**
@@ -361,10 +361,10 @@ public class SeabedObject implements ISeabedObject {
 	 * @param Id
 	 * @return
 	 */
-	public static Map<String, List<String>> get(Class<?> clazz, String Id) {
+	public static Map<String, List<String>> getAsMap(Class<?> clazz, String Id) {
 		RedisDAO dao = new RedisDAO();
 		try {
-			return dao.get(clazz, Id);
+			return dao.getAsMap(clazz, Id);
 		} catch (NoNamespaceFoundException e) {
 			e.printStackTrace();
 		}

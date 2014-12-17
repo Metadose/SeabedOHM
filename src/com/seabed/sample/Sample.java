@@ -14,8 +14,8 @@ public class Sample {
 	}
 
 	public static void get() throws SeabedOHMException {
-		Map<String, List<String>> object = SeabedObject.get(SampleObject.class,
-				2);
+		Map<String, List<String>> objectMap = SeabedObject.getAsMap(
+				SampleObject.class, 2);
 		Set<String> keys = SeabedObject.getAllKeys(SampleObject.class);
 	}
 
