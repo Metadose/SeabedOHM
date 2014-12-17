@@ -25,6 +25,10 @@ public class SampleObject extends SeabedObject {
 	public SampleObject() throws SeabedOHMException {
 		super();
 	}
+	
+	public SampleObject(Object id) throws SeabedOHMException {
+		super(id);
+	}
 
 	@ID
 	@AutoIncrement
@@ -40,7 +44,7 @@ public class SampleObject extends SeabedObject {
 ```
 
 
-## Usage
+## Creating a Persistent Object
 
 ### Namespace
 ```java
@@ -61,6 +65,10 @@ public class SampleObject extends SeabedObject
 ```java
 	public SampleObject() throws SeabedOHMException {
 		super();
+	}
+	
+	public SampleObject(Object id) throws SeabedOHMException {
+		super(id);
 	}
 ```
 * Add a `constructor` which throws `SeabedOHMException`
@@ -90,3 +98,16 @@ public class SampleObject extends SeabedObject
 2. String
 3. List<String>
 4. JSONObject
+
+
+## Usage
+
+### Create
+```java
+public static void create() throws SeabedOHMException {
+	SampleObject obj = new SampleObject(); // Construct the object.
+	obj.setFirstName("John"); // Set obj first name.
+	obj.setLastName("Doe"); // Set obj last name.
+	obj.create(); // To add a new entry.
+}
+```
