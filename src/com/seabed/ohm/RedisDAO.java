@@ -81,18 +81,43 @@ public class RedisDAO {
 		return keys;
 	}
 
+	/**
+	 * Create a new entry in the database
+	 * 
+	 * @param id
+	 * @param obj
+	 * @throws NoSBObjectAnnotationException
+	 * @throws NoNamespaceFoundException
+	 * @throws NoIDFieldFoundException
+	 */
 	public void create(String id, Object obj)
 			throws NoSBObjectAnnotationException, NoNamespaceFoundException,
 			NoIDFieldFoundException {
 		hmset(true, id, obj);
 	}
 
+	/**
+	 * Update an existing entry in the database.
+	 * 
+	 * @param id
+	 * @param obj
+	 * @throws NoSBObjectAnnotationException
+	 * @throws NoNamespaceFoundException
+	 * @throws NoIDFieldFoundException
+	 */
 	public void update(String id, Object obj)
 			throws NoSBObjectAnnotationException, NoNamespaceFoundException,
 			NoIDFieldFoundException {
 		hmset(false, id, obj);
 	}
 
+	/**
+	 * Delete an entry in the database.
+	 * 
+	 * @param obj
+	 * @param id
+	 * @return
+	 */
 	public long delete(Object obj, String id) {
 		startConnection();
 		String key = obj.getClass().getAnnotation(SBObject.class).namespace()
@@ -150,7 +175,7 @@ public class RedisDAO {
 
 				} else {
 
-					int dataType = DataType.getDataType(field);
+					int dataType = DataType.getDataType(obj, field);
 					// If value is a list.
 					if (dataType == DataType.DATA_TYPE_LIST) {
 						List<String> valueList = (ArrayList) value;
@@ -227,7 +252,10 @@ public class RedisDAO {
 	 * @return
 	 */
 	public long getIncrement(String namespace) {
-		return jedis.incr(namespace);
+		startConnection();
+		long inc = jedis.incr(namespace);
+		closeConnection();
+		return inc;
 	}
 
 	public void flushAll() {

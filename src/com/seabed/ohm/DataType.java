@@ -16,9 +16,23 @@ public abstract class DataType {
 	public static final int DATA_TYPE_LIST = 6;
 	public static final int DATA_TYPE_JSON = 7;
 
-	public static int getDataType(Field field) {
+	/**
+	 * Get the data type associated with this field in the passed object.
+	 * 
+	 * @param obj
+	 * @param field
+	 * @return
+	 */
+	public static int getDataType(Object obj, Field field) {
 		int dataType = 0;
-		Class<?> dataTypeClazz = field.getClass();
+		Class<?> dataTypeClazz = null;
+		try {
+			dataTypeClazz = field.get(obj).getClass();
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		}
 
 		if (dataTypeClazz == List.class) {
 			dataType = DataType.DATA_TYPE_LIST;

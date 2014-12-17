@@ -10,9 +10,11 @@ import java.util.Set;
 
 import org.json.JSONObject;
 
+import com.seabed.ohm.annotations.AutoIncrement;
 import com.seabed.ohm.annotations.ID;
 import com.seabed.ohm.annotations.Persist;
 import com.seabed.ohm.annotations.SBObject;
+import com.seabed.ohm.exceptions.AutoIncrementNotNumberException;
 import com.seabed.ohm.exceptions.MultipleIDFieldFoundException;
 import com.seabed.ohm.exceptions.NoIDFieldFoundException;
 import com.seabed.ohm.exceptions.NoNamespaceFoundException;
@@ -21,21 +23,96 @@ import com.seabed.ohm.exceptions.NoSBObjectAnnotationException;
 
 public class SeabedObject implements ISeabedObject {
 
+	private List<Field> allFields;
+	private Field idField;
+	private boolean isIDAutoIncrement;
+	private int idDataType;
+	private String namespace;
+
 	public SeabedObject() throws NoNamespaceFoundException,
 			NoPersistentFieldFoundException, NoIDFieldFoundException,
+			MultipleIDFieldFoundException, AutoIncrementNotNumberException {
+		checkNamespace();
+		checkPersistentFields();
+		checkIDField();
+		checkAutoIncrement();
+	}
+
+	/**
+	 * Check the auto increment.
+	 * 
+	 * @return
+	 * @throws AutoIncrementNotPersistentException
+	 * @throws AutoIncrementNotNumberException
+	 */
+	private void checkAutoIncrement() throws AutoIncrementNotNumberException {
+
+		// Loop through all fields.
+		for (Field field : this.getClass().getFields()) {
+			AutoIncrement autoInc = field.getAnnotation(AutoIncrement.class);
+
+			// If not present, skip it.
+			if (autoInc == null) {
+				continue;
+			}
+
+			// If exists but not a number.
+			if (getIdDataType() != DataType.DATA_TYPE_NUMBER) {
+				throw new AutoIncrementNotNumberException();
+			}
+			setIDAutoIncrement(true);
+			return;
+		}
+		setIDAutoIncrement(false);
+	}
+
+	/**
+	 * Check validity of the ID field.
+	 * 
+	 * @throws NoIDFieldFoundException
+	 * @throws MultipleIDFieldFoundException
+	 */
+	private void checkIDField() throws NoIDFieldFoundException,
 			MultipleIDFieldFoundException {
-		if (!namespaceExists()) {
-			throw new NoNamespaceFoundException();
-		}
-		if (getDBFields().isEmpty()) {
-			throw new NoPersistentFieldFoundException();
-		}
 		int idCount = countIDFields();
 		if (idCount == 0) {
 			throw new NoIDFieldFoundException();
 		} else if (idCount > 1) {
 			throw new MultipleIDFieldFoundException();
 		}
+		Field field = getIDAnnotatedField();
+		int dataType = DataType.getDataType(this, field);
+		setIdDataType(dataType);
+		setIdField(field);
+	}
+
+	/**
+	 * Get the field with ID annotation.
+	 * 
+	 * @return
+	 */
+	private Field getIDAnnotatedField() {
+		Class<?> clazz = this.getClass();
+		for (Field field : clazz.getFields()) {
+			ID idField = field.getAnnotation(ID.class);
+			if (idField == null) {
+				continue;
+			}
+			return field;
+		}
+		return null;
+	}
+
+	/**
+	 * Initialize this class' persistent fields.
+	 * 
+	 * @throws NoPersistentFieldFoundException
+	 */
+	private void checkPersistentFields() throws NoPersistentFieldFoundException {
+		if (!persistentFieldsExists()) {
+			throw new NoPersistentFieldFoundException();
+		}
+		setAllFields(getPersistentFields());
 	}
 
 	/**
@@ -61,15 +138,45 @@ public class SeabedObject implements ISeabedObject {
 	 * 
 	 * @return
 	 */
-	public List<String> getDBFields() {
-		List<String> dbFields = new ArrayList<String>();
+	public List<Field> getPersistentFields() {
+		List<Field> dbFields = new ArrayList<Field>();
 		for (Field field : this.getClass().getFields()) {
 			Persist anno = field.getAnnotation(Persist.class);
 			if (anno != null) {
-				dbFields.add(field.getName());
+				dbFields.add(field);
 			}
 		}
 		return dbFields;
+	}
+
+	/**
+	 * Get list of all fields.
+	 * 
+	 * @return
+	 */
+	public boolean persistentFieldsExists() {
+		for (Field field : this.getClass().getFields()) {
+			Persist anno = field.getAnnotation(Persist.class);
+			if (anno != null) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Initialize the namespace.
+	 * 
+	 * @return
+	 * @throws NoNamespaceFoundException
+	 */
+	private boolean checkNamespace() throws NoNamespaceFoundException {
+		if (!namespaceExists()) {
+			throw new NoNamespaceFoundException();
+		}
+		SBObject anno = this.getClass().getAnnotation(SBObject.class);
+		setNamespace(anno.namespace());
+		return true;
 	}
 
 	/**
@@ -98,11 +205,10 @@ public class SeabedObject implements ISeabedObject {
 					continue;
 				}
 
-				int dataType = DataType.getDataType(fieldObj);
-				if (dataType == DataType.DATA_TYPE_LIST) {
+				if (getIdDataType() == DataType.DATA_TYPE_LIST) {
 					fieldObj.set(this, value);
 				} else {
-					if (dataType == DataType.DATA_TYPE_JSON) {
+					if (getIdDataType() == DataType.DATA_TYPE_JSON) {
 						String jsonStr = value.get(0);
 						fieldObj.set(this, new JSONObject(jsonStr));
 					} else {
@@ -116,31 +222,32 @@ public class SeabedObject implements ISeabedObject {
 	}
 
 	public String getId() {
-		// Get the class.
-		Class<?> clazz = this.getClass();
 		String value = "";
 
-		// Loop through each field in the class.
-		for (Field field : clazz.getFields()) {
-
-			// If field is not ID, skip it.
-			ID idField = field.getAnnotation(ID.class);
-			if (idField == null) {
-				continue;
-			}
+		// If ID is a number and is set to auto-increment.
+		if (getIdDataType() == DataType.DATA_TYPE_NUMBER && isIDAutoIncrement()) {
+			RedisDAO dao = new RedisDAO();
+			long nextIncr = dao.getIncrement(getNamespace());
+			value = String.valueOf(nextIncr);
+		}
+		// If not a number, like String.
+		else {
 			try {
-				Object val = field.get(this);
+				Field idField = getIdField();
+				Object val = idField.get(this);
 				value = val != null ? String.valueOf(val) : "";
 			} catch (IllegalArgumentException e) {
 				e.printStackTrace();
 			} catch (IllegalAccessException e) {
 				e.printStackTrace();
 			}
-			break;
 		}
 		return value;
 	}
 
+	/**
+	 * Create a new entry in the Redis db.
+	 */
 	public void create() {
 		RedisDAO dao = new RedisDAO();
 		try {
@@ -154,6 +261,11 @@ public class SeabedObject implements ISeabedObject {
 		}
 	}
 
+	/**
+	 * Update the persistent fields of this class.<br>
+	 * The new values in Redis will be whatever is the current value of the
+	 * persistent variables.
+	 */
 	public void update() {
 		RedisDAO dao = new RedisDAO();
 		try {
@@ -167,13 +279,16 @@ public class SeabedObject implements ISeabedObject {
 		}
 	}
 
+	/**
+	 * Delete this entry.
+	 */
 	public long delete() {
 		RedisDAO dao = new RedisDAO();
 		return dao.delete(this, getId());
 	}
 
 	/**
-	 * Get all keys listed in Redis.
+	 * Get all keys listed in Redis associated with this class.
 	 */
 	public static Set<String> getAllKeys(Class<?> clazz) {
 		RedisDAO dao = new RedisDAO();
@@ -185,6 +300,13 @@ public class SeabedObject implements ISeabedObject {
 		return new HashSet<String>();
 	}
 
+	/**
+	 * Get the object map given a class name and an ID.
+	 * 
+	 * @param clazz
+	 * @param Id
+	 * @return
+	 */
 	public static Map<String, List<String>> get(Class<?> clazz, String Id) {
 		RedisDAO dao = new RedisDAO();
 		try {
@@ -193,5 +315,45 @@ public class SeabedObject implements ISeabedObject {
 			e.printStackTrace();
 		}
 		return new HashMap<String, List<String>>();
+	}
+
+	public List<Field> getAllFields() {
+		return allFields;
+	}
+
+	public void setAllFields(List<Field> allFields) {
+		this.allFields = allFields;
+	}
+
+	public Field getIdField() {
+		return idField;
+	}
+
+	public void setIdField(Field idField) {
+		this.idField = idField;
+	}
+
+	public String getNamespace() {
+		return namespace;
+	}
+
+	public void setNamespace(String namespace) {
+		this.namespace = namespace;
+	}
+
+	public int getIdDataType() {
+		return idDataType;
+	}
+
+	public void setIdDataType(int idDataType) {
+		this.idDataType = idDataType;
+	}
+
+	public boolean isIDAutoIncrement() {
+		return isIDAutoIncrement;
+	}
+
+	public void setIDAutoIncrement(boolean isIDAutoIncrement) {
+		this.isIDAutoIncrement = isIDAutoIncrement;
 	}
 }
