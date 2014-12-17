@@ -1,12 +1,14 @@
 package com.seabed.ohm;
 
 import java.lang.reflect.Field;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import redis.clients.jedis.Jedis;
@@ -19,10 +21,16 @@ import com.seabed.ohm.exceptions.NoSBObjectAnnotationException;
 import com.seabed.util.TraceUtilities;
 import com.seabed.util.Utilities;
 
-public class RedisDAO {
+public class SeabedEngine {
 
 	public static final String SEPARATOR = ":";
 	public Jedis jedis;
+
+	public Object getAsObj(Object obj, long id)
+			throws NoNamespaceFoundException, IllegalAccessException,
+			JSONException {
+		return getAsObj(obj, String.valueOf(id));
+	}
 
 	/**
 	 * Get values. hmget(String key)<br>
@@ -36,7 +44,8 @@ public class RedisDAO {
 	 * @throws NoNamespaceFoundException
 	 */
 	public Object getAsObj(Object obj, String id)
-			throws NoNamespaceFoundException {
+			throws NoNamespaceFoundException, IllegalAccessException,
+			JSONException {
 		Class<?> clazz = obj.getClass();
 		String namespace = clazz.getAnnotation(SBObject.class).namespace();
 		if (namespace == null) {
@@ -55,26 +64,63 @@ public class RedisDAO {
 			}
 			String fieldName = field.getName();
 			List<String> resultList = jedis.hmget(key, fieldName);
+			String firstElem = resultList.get(0);
 
-			// TODO
 			// Set the value inside the object.
-			try {
-				clazz.getField(fieldName).get(obj);
-				int dataType = DataType.getDataType(obj, field);
-			} catch (IllegalArgumentException e) {
-				e.printStackTrace();
-			} catch (SecurityException e) {
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				e.printStackTrace();
-			} catch (NoSuchFieldException e) {
-				e.printStackTrace();
+			if (firstElem != null) {
+				try {
+					Field classField = clazz.getField(fieldName);
+					classField = getClassFieldValue(classField, resultList,
+							obj, field);
+				} catch (IllegalArgumentException e) {
+					e.printStackTrace();
+				} catch (SecurityException e) {
+					e.printStackTrace();
+				} catch (NoSuchFieldException e) {
+					e.printStackTrace();
+				}
 			}
 
 		}
 
 		closeConnection();
 		return obj;
+	}
+
+	private Field getClassFieldValue(Field classField, List<String> resultList,
+			Object obj, Field field) {
+		String firstElem = resultList.get(0);
+		int dataType = DataType.getDataType(obj, field);
+
+		try {
+			if (dataType == DataType.DATA_TYPE_BOOLEAN) {
+				classField.setBoolean(obj, Boolean.valueOf(firstElem));
+
+			} else if (dataType == DataType.DATA_TYPE_FLOAT) {
+				classField.setFloat(obj, Float.valueOf(firstElem));
+
+			} else if (dataType == DataType.DATA_TYPE_JSON) {
+				classField.set(obj, new JSONObject(firstElem));
+
+			} else if (dataType == DataType.DATA_TYPE_LIST) {
+				classField.set(obj, resultList);
+
+			} else if (dataType == DataType.DATA_TYPE_LONG) {
+				classField.setLong(obj, Long.valueOf(firstElem));
+
+			} else if (dataType == DataType.DATA_TYPE_INT) {
+				classField.setInt(obj, Integer.valueOf(firstElem));
+
+			} else if (dataType == DataType.DATA_TYPE_STRING) {
+				classField.set(obj, firstElem);
+
+			} else if (dataType == DataType.DATA_TYPE_TIMESTAMP) {
+				classField.set(obj, Timestamp.valueOf(firstElem));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return classField;
 	}
 
 	/**

@@ -10,7 +10,13 @@ import com.seabed.ohm.exceptions.SeabedOHMException;
 public class Sample {
 
 	public static void main(String[] args) throws SeabedOHMException {
-		get();
+		getObj();
+	}
+
+	// TODO Work on this feature.
+	public static void getObj() throws SeabedOHMException {
+		Object obj = SeabedObject.getAsObj(new SampleObject(), 2);
+		obj.toString();
 	}
 
 	public static void get() throws SeabedOHMException {

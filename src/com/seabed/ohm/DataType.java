@@ -8,13 +8,18 @@ import org.json.JSONObject;
 
 public abstract class DataType {
 
-	public static final int DATA_TYPE_NUMBER = 1;
+	public static final int DATA_TYPE_LONG = 1;
 	public static final int DATA_TYPE_FLOAT = 2;
 	public static final int DATA_TYPE_BOOLEAN = 3;
 	public static final int DATA_TYPE_STRING = 4;
 	public static final int DATA_TYPE_TIMESTAMP = 5;
 	public static final int DATA_TYPE_LIST = 6;
 	public static final int DATA_TYPE_JSON = 7;
+	public static final int DATA_TYPE_INT = 7;
+
+	public static boolean isNumber(int dType) {
+		return dType == DATA_TYPE_LONG || dType == DATA_TYPE_INT;
+	}
 
 	/**
 	 * Get the data type associated with this field in the passed object.
@@ -53,13 +58,15 @@ public abstract class DataType {
 		} else if (dataTypeClazz == Float.class || dataTypeClazz == Float.TYPE) {
 			dataType = DataType.DATA_TYPE_FLOAT;
 
-		} else if (dataTypeClazz == Integer.class
-				|| dataTypeClazz == Integer.TYPE || dataTypeClazz == Long.class
-				|| dataTypeClazz == Long.TYPE || dataTypeClazz == Double.class
+		} else if (dataTypeClazz == Long.class || dataTypeClazz == Long.TYPE
+				|| dataTypeClazz == Double.class
 				|| dataTypeClazz == Double.TYPE || dataTypeClazz == Short.class
 				|| dataTypeClazz == Short.TYPE) {
-			dataType = DataType.DATA_TYPE_NUMBER;
+			dataType = DataType.DATA_TYPE_LONG;
 
+		} else if (dataTypeClazz == Integer.class
+				|| dataTypeClazz == Integer.TYPE) {
+			dataType = DataType.DATA_TYPE_INT;
 		}
 		return dataType;
 	}

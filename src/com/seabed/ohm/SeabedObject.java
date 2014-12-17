@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.seabed.ohm.annotations.AutoIncrement;
@@ -90,7 +91,7 @@ public class SeabedObject implements ISeabedObject {
 			}
 
 			// If exists but not a number.
-			if (getIdDataType() != DataType.DATA_TYPE_NUMBER) {
+			if (!DataType.isNumber(getIdDataType())) {
 				throw new AutoIncrementNotNumberException();
 			}
 			setIDAutoIncrement(true);
@@ -274,9 +275,9 @@ public class SeabedObject implements ISeabedObject {
 		String value = "";
 
 		// If ID is a number and is set to auto-increment.
-		if (getIdDataType() == DataType.DATA_TYPE_NUMBER && isIDAutoIncrement()
+		if (DataType.isNumber(getIdDataType()) && isIDAutoIncrement()
 				&& isCreate) {
-			RedisDAO dao = new RedisDAO();
+			SeabedEngine dao = new SeabedEngine();
 			long nextIncr = dao.getIncrement(getNamespace());
 			value = String.valueOf(nextIncr);
 		}
@@ -299,7 +300,7 @@ public class SeabedObject implements ISeabedObject {
 	 * Create a new entry in the Redis db.
 	 */
 	public void create() {
-		RedisDAO dao = new RedisDAO();
+		SeabedEngine dao = new SeabedEngine();
 		try {
 			dao.create(getId(true), this);
 		} catch (NoSBObjectAnnotationException e) {
@@ -317,7 +318,7 @@ public class SeabedObject implements ISeabedObject {
 	 * persistent variables.
 	 */
 	public void update() {
-		RedisDAO dao = new RedisDAO();
+		SeabedEngine dao = new SeabedEngine();
 		try {
 			dao.update(getId(false), this);
 		} catch (NoSBObjectAnnotationException e) {
@@ -333,7 +334,7 @@ public class SeabedObject implements ISeabedObject {
 	 * Delete this entry.
 	 */
 	public long delete() {
-		RedisDAO dao = new RedisDAO();
+		SeabedEngine dao = new SeabedEngine();
 		return dao.delete(this, getId(false));
 	}
 
@@ -341,13 +342,27 @@ public class SeabedObject implements ISeabedObject {
 	 * Get all keys listed in Redis associated with this class.
 	 */
 	public static Set<String> getAllKeys(Class<?> clazz) {
-		RedisDAO dao = new RedisDAO();
+		SeabedEngine dao = new SeabedEngine();
 		try {
 			return dao.getAllKeys(clazz);
 		} catch (NoNamespaceFoundException e) {
 			e.printStackTrace();
 		}
 		return new HashSet<String>();
+	}
+
+	public static Object getAsObj(Object obj, long Id) {
+		SeabedEngine dao = new SeabedEngine();
+		try {
+			return dao.getAsObj(obj, Id);
+		} catch (NoNamespaceFoundException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	public static Map<String, List<String>> getAsMap(Class<?> clazz, long Id) {
@@ -362,7 +377,7 @@ public class SeabedObject implements ISeabedObject {
 	 * @return
 	 */
 	public static Map<String, List<String>> getAsMap(Class<?> clazz, String Id) {
-		RedisDAO dao = new RedisDAO();
+		SeabedEngine dao = new SeabedEngine();
 		try {
 			return dao.getAsMap(clazz, Id);
 		} catch (NoNamespaceFoundException e) {
