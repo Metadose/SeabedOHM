@@ -1,26 +1,24 @@
-package com.seabed.sample;
+package com.seabed.tests;
 
 import com.seabed.ohm.SeabedObject;
-import com.seabed.ohm.annotations.AutoIncrement;
 import com.seabed.ohm.annotations.ID;
 import com.seabed.ohm.annotations.Persist;
 import com.seabed.ohm.annotations.SBObject;
 import com.seabed.ohm.exceptions.SeabedOHMException;
 
-@SBObject(namespace = "sample")
-public class SampleObject extends SeabedObject {
+@SBObject(namespace = "test2")
+public class TestObjectWithStringID extends SeabedObject {
 
-	public SampleObject() throws SeabedOHMException {
+	public TestObjectWithStringID() throws SeabedOHMException {
 		super();
 	}
 
-	public SampleObject(Object id) throws SeabedOHMException {
+	public TestObjectWithStringID(Object id) throws SeabedOHMException {
 		super(id);
 	}
 
 	@ID
-	@AutoIncrement
-	public int id;
+	public String id = "testID";
 
 	@Persist
 	public String firstName;

@@ -403,11 +403,11 @@ public class SeabedObject implements ISeabedObject {
 		this.idField = idField;
 	}
 
-	private String getNamespace() {
+	public String getNamespace() {
 		return namespace;
 	}
 
-	private void setNamespace(String namespace) {
+	public void setNamespace(String namespace) {
 		this.namespace = namespace;
 	}
 

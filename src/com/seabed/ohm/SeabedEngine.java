@@ -237,7 +237,7 @@ public class SeabedEngine {
 	 * @throws NoIDFieldFoundException
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void hmset(boolean isCreate, String id, Object obj)
+	private void hmset(boolean isCreate, String id, Object obj)
 			throws NoSBObjectAnnotationException, NoNamespaceFoundException,
 			NoIDFieldFoundException {
 		// Get and check the namespace.
@@ -315,8 +315,7 @@ public class SeabedEngine {
 	 * @return
 	 * @throws NoSBObjectAnnotationException
 	 */
-	private String getNamespace(Object obj)
-			throws NoSBObjectAnnotationException {
+	public String getNamespace(Object obj) throws NoSBObjectAnnotationException {
 		// Construct key and initial objs.
 		Class<?> clazz = obj.getClass();
 		SBObject classAnno = clazz.getAnnotation(SBObject.class);

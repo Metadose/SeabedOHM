@@ -32,6 +32,10 @@ public abstract class DataType {
 		int dataType = 0;
 		Class<?> dataTypeClazz = null;
 		try {
+			Object value = field.get(obj);
+			if (value == null) {
+				return DataType.DATA_TYPE_STRING;
+			}
 			dataTypeClazz = field.get(obj).getClass();
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
