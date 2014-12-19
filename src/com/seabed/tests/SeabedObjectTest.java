@@ -6,8 +6,8 @@ import static org.junit.Assert.assertTrue;
 import java.lang.reflect.Field;
 import java.util.List;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.seabed.ohm.SeabedEngine;
@@ -46,7 +46,6 @@ public class SeabedObjectTest {
 		assertEquals("testID", obj2.getId(true));
 	}
 
-	// TODO
 	@Test
 	public void testAutoIncrement() throws SeabedOHMException {
 		SeabedEngine eng = new SeabedEngine();
@@ -55,17 +54,17 @@ public class SeabedObjectTest {
 
 		assertEquals(1, eng.getIncrement(ns));
 		obj.create();
-		assertEquals(3, eng.getIncrement(ns));
+		assertEquals(2, eng.getIncrement(ns));
 	}
 
-	@BeforeClass
-	public static void before() {
+	@Before
+	public void before() {
 		SeabedEngine eng = new SeabedEngine();
 		eng.flushAll();
 	}
 
-	@AfterClass
-	public static void after() {
+	@After
+	public void after() {
 		SeabedEngine eng = new SeabedEngine();
 		eng.flushAll();
 	}
